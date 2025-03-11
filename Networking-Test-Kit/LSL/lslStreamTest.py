@@ -1,15 +1,15 @@
 """Example program to show how to read a multi-channel time series from LSL."""
 import time
-from pylsl import StreamInlet, resolve_stream
+from pylsl import StreamInlet, resolve_byprop
 from time import sleep
 
 # first resolve an EEG stream on the lab network
 print("looking for an EEG stream...")
-streams = resolve_stream('type', 'EEG')
+streams = resolve_byprop('type', 'EEG')
 
 # create a new inlet to read from the stream
 inlet = StreamInlet(streams[0])
-duration = 5
+duration = 10
 
 sleep(1)
 
@@ -24,13 +24,16 @@ def testLSLSamplingRate():
         # get chunks of samples
         chunk, timestamp = inlet.pull_chunk()
         if chunk:
+            print("\nNew chunk!")
             numChunks += 1
             # print( len(chunk) )
             totalNumSamples += len(chunk)
-            # print(chunk);
+            # print(chunk)
+            i = 0
             for sample in chunk:
-                # print(sample)
+                print(sample, timestamp[i])
                 validSamples += 1
+                i += 1
 
     print( "Number of Chunks and Samples == {} , {}".format(numChunks, totalNumSamples) )
     print( "Valid Samples and Duration == {} / {}".format(validSamples, duration) )

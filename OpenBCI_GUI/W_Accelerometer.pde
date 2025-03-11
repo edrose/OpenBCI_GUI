@@ -89,7 +89,7 @@ class W_Accelerometer extends Widget {
     }
 
     int nPointsBasedOnDataSource() {
-        return accelHorizLimit * currentBoard.getSampleRate();
+        return accelHorizLimit * ((AccelerometerCapableBoard)currentBoard).getAccelSampleRate();
     }
 
     void update() {
@@ -438,10 +438,10 @@ class AccelerometerBar {
 
     //Used to update the Points within the graph
     void updateGPlotPoints() {
-        List<double[]> allData = currentBoard.getData(nPoints);
+        List<double[]> allData = accelBoard.getDataWithAccel(nPoints);
         int[] accelChannels = accelBoard.getAccelerometerChannels();
 
-        for (int i=0; i < nPoints; i++) {
+        for (int i = 0; i < nPoints; i++) {
             accelPointsX.set(i, accelTimeArray[i], (float)allData.get(i)[accelChannels[0]], "");
             accelPointsY.set(i, accelTimeArray[i], (float)allData.get(i)[accelChannels[1]], "");
             accelPointsZ.set(i, accelTimeArray[i], (float)allData.get(i)[accelChannels[2]], "");

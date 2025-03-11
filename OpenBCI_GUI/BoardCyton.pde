@@ -252,16 +252,12 @@ implements ImpedanceSettingsBoard, AccelerometerCapableBoard, AnalogCapableBoard
     protected boolean[] isCheckingImpedanceN;
     protected boolean[] isCheckingImpedanceP;
 
-    // same for all channels
-    private final double brainflowGain = 24.0;
-
     private int[] accelChannelsCache = null;
     private int[] analogChannelsCache = null;
 
     protected String serialPort = "";
     protected String ipAddress = "";
     private CytonBoardMode currentBoardMode = CytonBoardMode.DEFAULT;
-    private boolean useDynamicScaler;
 
     public BoardCyton() {
         super();
@@ -276,7 +272,6 @@ implements ImpedanceSettingsBoard, AccelerometerCapableBoard, AnalogCapableBoard
 
         // The command 'd' is automatically sent by brainflow on prepare_session
         currentADS1299Settings = new CytonDefaultSettings(this);
-        useDynamicScaler = true;
     }
 
     // implement mandatory abstract functions
@@ -308,6 +303,21 @@ implements ImpedanceSettingsBoard, AccelerometerCapableBoard, AnalogCapableBoard
     @Override
     public boolean isEXGChannelActive(int channelIndex) {
         return currentADS1299Settings.isChannelActive(channelIndex);
+    }
+
+    @Override
+    public int getAccelSampleRate() {
+        return getSampleRate();
+    }
+
+    @Override
+    public int getAnalogSampleRate() {
+        return getSampleRate();
+    }
+
+    @Override
+    public int getDigitalSampleRate() {
+        return getSampleRate();
     }
 
     @Override
@@ -540,24 +550,6 @@ implements ImpedanceSettingsBoard, AccelerometerCapableBoard, AnalogCapableBoard
     }
 
     @Override
-    protected double[][] getNewDataInternal() {
-        double[][] data = super.getNewDataInternal();
-        int[] exgChannels = getEXGChannels();
-        for (int i = 0; i < exgChannels.length; i++) {
-            for (int j = 0; j < data[exgChannels[i]].length; j++) {
-                // brainflow assumes a fixed gain of 24. Undo brainflow's scaling and apply new scale.
-                double currentGain = 1.0;
-                if (useDynamicScaler) {
-                    currentGain = currentADS1299Settings.values.gain[i].getScalar();
-                }
-                double scalar = brainflowGain / currentGain;
-                data[exgChannels[i]][j] *= scalar;
-            }
-        }
-        return data;
-    }
-
-    @Override
     public ADS1299Settings getADS1299Settings() {
         return currentADS1299Settings;
     }
@@ -610,12 +602,23 @@ implements ImpedanceSettingsBoard, AccelerometerCapableBoard, AnalogCapableBoard
     
     @Override
     protected void addChannelNamesInternal(String[] channelNames) {
-        for (int i=0; i<getAccelerometerChannels().length; i++) {
+        for (int i = 0; i < getAccelerometerChannels().length; i++) {
             channelNames[getAccelerometerChannels()[i]] = "Accel Channel " + i;
         }
-        for (int i=0; i<getAnalogChannels().length; i++) {
+        for (int i = 0; i < getAnalogChannels().length; i++) {
             channelNames[getAnalogChannels()[i]] = "Analog Channel " + i;
         }
+        
+        channelNames[getDigitalChannels()[0]] = "Digital Channel 0 (D11)";
+        channelNames[getDigitalChannels()[1]] = "Digital Channel 1 (D12)";
+        channelNames[getDigitalChannels()[2]] = "Digital Channel 2 (D13)";
+        channelNames[getDigitalChannels()[3]] = "Digital Channel 3 (D17)";
+        channelNames[getDigitalChannels()[4]] = "Digital Channel 4 (D18)";
+
+        channelNames[getOtherChannels()[0]] = "Not Used";
+        channelNames[getOtherChannels()[5]] = "Not Used";
+
+        channelNames[getMarkerChannel()] = "Marker Channel";
     }
 
     @Override
@@ -624,12 +627,17 @@ implements ImpedanceSettingsBoard, AccelerometerCapableBoard, AnalogCapableBoard
     }
 
     @Override
-    public boolean getUseDynamicScaler() {
-        return useDynamicScaler;
+    public List<double[]> getDataWithAccel(int maxSamples) {
+        return getData(maxSamples);
     }
 
     @Override
-    public void setUseDynamicScaler(boolean val) {
-        useDynamicScaler = val;
+    public List<double[]> getDataWithAnalog(int maxSamples) {
+        return getData(maxSamples);
+    }
+
+    @Override
+    public List<double[]> getDataWithDigital(int maxSamples) {
+        return getData(maxSamples);
     }
 };
